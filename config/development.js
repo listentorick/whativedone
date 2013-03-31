@@ -15,7 +15,7 @@ var configuration = {
       secure: true
 	},
 	//database: "mongodb://localhost/whatidone_dev"//,
-	database: "mongodb://listentorick:transparent@linus.mongohq.com:10040/app14300091"
+	database: "mongodb://heroku:transparent@linus.mongohq.com:10040/app14300091"
 };
 
 module.exports = configuration;	  

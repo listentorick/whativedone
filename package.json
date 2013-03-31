@@ -15,6 +15,7 @@
 	,"pegjs": "0.7.0"
 	,"mailparser": "0.3.4"
 	,"winston": "0.6.2"
+	,"winston-papertrail": "0.0.6"
   },
    "engines": {
     "node": "0.8.x",

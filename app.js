@@ -80,11 +80,12 @@ mongoose.connection.on('open', function (err) {
 	});
 	
 	app.get('/nudge', function() {
+		logger.info("handling request to nudge");
 		MongoUser.find(
 			{},
 			function(err, docs) {
-			console.log(docs.length);
 			if (!err){ 
+				logger.info("found " + docs.length + " users");
 			  
 				for(var i=0; i<docs.length; i++ ){
 					nudger.nudge(docs[i], function(err, result) {});
@@ -99,7 +100,7 @@ mongoose.connection.on('open', function (err) {
 });
 	
 mongoose.connection.on('error', function (err) {
-	logger.info("err");
+	logger.info(JSON.stringify(err));
 });
 
 mongoose.connect(configuration.database);
