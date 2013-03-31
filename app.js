@@ -7,11 +7,13 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var Nudger = require("./nudger");
 var CronJob = require("cron").CronJob;
-
+var logger = require("./logger");
 
 var IMAPReader = require("./IMAPReader");
 var MessageParser = require("./messageParser");
 var TaskParser = require("./taskParser");
+var MongoUser = require("./models/user");
+
 
 
 app.configure(function(){
@@ -40,7 +42,42 @@ http.createServer(app).listen(app.get('port'), function(){
 
 var configuration = require("./config/development");
 
+mongoose.connection.on('open', function (err) {
+
+	logger.info("connected");
+	
+	var taskParser = new TaskParser();
+
+	var messageParser = new MessageParser(taskParser, nudger);
+
+	var reader = new IMAPReader(configuration.reader);
+
+	reader.read(); //to be called by a cron job...
+
+	reader.on("message", function(message) {
+		messageParser.parse(message);
+	});
+
+	messageParser.on("task", function(task) {
+		//seems like a good time to save?
+		console.log(JSON.stringify(task));
+	});
+
+});
+	
+mongoose.connection.on('error', function (err) {
+	logger.info("err");
+});
+
 mongoose.connect(configuration.database);
+
+//db.on("error", function(err) {
+	
+	//logger.info("got an error");
+
+	//logger.info(err);
+//});
+
 
 var sender = new Sender(configuration.sender);
 
@@ -55,18 +92,17 @@ var sender = new Sender(configuration.sender);
 var nudger = new Nudger(sender);
 
 
-/*
-var MongoUser = require("./models/user");
-send a nudge
 
-new MongoUser({name: "rick", email:"rick.walsh@gmail.com"}).save();
+
+
+//new MongoUser({name: "rick", email:"rick.walsh@gmail.com"}).save();
 
 //something needs to tell the nudger to nudge (via cron)
 //something needs to find the users required to be nudged
 
 
 
-
+/*
 MongoUser.find(
 		{},
 		function(err, docs) {
@@ -74,38 +110,23 @@ MongoUser.find(
 		if (!err){ 
 		  
 		  for(var i=0; i<docs.length; i++ ){
-			nudger.nudge(docs[i], function(err, result) {
+			
+		//	nudger.nudge(docs[i], function(err, result) {
 			
 			
-			});
+			//});
 		  }
 		  
 		} else { throw err;}
 
 		}
     );
-
 */
+//*/
 
 
 
 
-var taskParser = new TaskParser();
-
-var messageParser = new MessageParser(taskParser, nudger);
-
-var reader = new IMAPReader(configuration.reader);
-
-reader.read(); //to be called by a cron job...
-
-reader.on("message", function(message) {
-	messageParser.parse(message);
-});
-
-messageParser.on("task", function(task) {
-	//seems like a good time to save?
-	console.log(JSON.stringify(task));
-});
 
 
 //another object will check the message box via IMAP on a schedule (node-cron) - could emit a 'response' event? 
