@@ -40,17 +40,26 @@ http.createServer(app).listen(app.get('port'), function(){
 });
 
 
+
+
 var configuration = require("./config/development");
+
+var reader;
+var messageParser;
+var taskParser;
+var nudger;
 
 mongoose.connection.on('open', function (err) {
 
 	logger.info("connected");
 	
-	var taskParser = new TaskParser();
+	nudger = new Nudger(sender);
+	
+	taskParser = new TaskParser();
 
-	var messageParser = new MessageParser(taskParser, nudger);
+	messageParser = new MessageParser(taskParser, nudger);
 
-	var reader = new IMAPReader(configuration.reader);
+	reader = new IMAPReader(configuration.reader);
 
 	reader.read(); //to be called by a cron job...
 
@@ -71,6 +80,28 @@ mongoose.connection.on('error', function (err) {
 
 mongoose.connect(configuration.database);
 
+app.get('/read', function() {
+	reader.read();
+});
+
+app.get('/nudge', function() {
+	MongoUser.find(
+		{},
+		function(err, docs) {
+		console.log(docs.length);
+		if (!err){ 
+		  
+			for(var i=0; i<docs.length; i++ ){
+				nudger.nudge(docs[i], function(err, result) {});
+			}
+		  
+		} else { throw err;}
+
+		}
+    );
+});
+
+
 //db.on("error", function(err) {
 	
 	//logger.info("got an error");
@@ -89,7 +120,7 @@ var sender = new Sender(configuration.sender);
 
 //load all the users..
 
-var nudger = new Nudger(sender);
+
 
 
 
