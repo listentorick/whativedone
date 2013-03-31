@@ -48,11 +48,14 @@ var reader;
 var messageParser;
 var taskParser;
 var nudger;
+var sender;
 
 mongoose.connection.on('open', function (err) {
 
 	logger.info("connected");
 	
+	sender = new Sender(configuration.sender);
+
 	nudger = new Nudger(sender);
 	
 	taskParser = new TaskParser();
@@ -71,6 +74,27 @@ mongoose.connection.on('open', function (err) {
 		//seems like a good time to save?
 		console.log(JSON.stringify(task));
 	});
+	
+	app.get('/read', function() {
+		reader.read();
+	});
+	
+	app.get('/nudge', function() {
+		MongoUser.find(
+			{},
+			function(err, docs) {
+			console.log(docs.length);
+			if (!err){ 
+			  
+				for(var i=0; i<docs.length; i++ ){
+					nudger.nudge(docs[i], function(err, result) {});
+				}
+			  
+			} else { throw err;}
+
+			}
+		);
+	});
 
 });
 	
@@ -80,26 +104,9 @@ mongoose.connection.on('error', function (err) {
 
 mongoose.connect(configuration.database);
 
-app.get('/read', function() {
-	reader.read();
-});
 
-app.get('/nudge', function() {
-	MongoUser.find(
-		{},
-		function(err, docs) {
-		console.log(docs.length);
-		if (!err){ 
-		  
-			for(var i=0; i<docs.length; i++ ){
-				nudger.nudge(docs[i], function(err, result) {});
-			}
-		  
-		} else { throw err;}
 
-		}
-    );
-});
+
 
 
 //db.on("error", function(err) {
@@ -110,7 +117,6 @@ app.get('/nudge', function() {
 //});
 
 
-var sender = new Sender(configuration.sender);
 
 //transport.send("rick.walsh@gmail.com", "test", "woop", function(error, response) {
 //	console.log(error);
