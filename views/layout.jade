@@ -1,0 +1,27 @@
+doctype 5
+html
+  include includes/header
+
+  body
+    div.navbar.navbar-fixed-top
+      div.navbar-inner
+        div.container
+          a(href='/').brand #{brand}
+          ul.nav
+            li.dropdown
+              a(href='#', data-toggle="dropdown").dropdown-toggle Tutorials
+                b.caret
+              ul.dropdown-menu
+                li
+                  a(href='/tutorial1') Tutorial 1
+                li
+                  a(href='/tutorial2') Tutorial 2
+            li
+              a(href='about') About
+
+    div.container
+      block content
+
+    include includes/scripts
+
+    block scripts

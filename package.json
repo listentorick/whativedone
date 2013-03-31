@@ -1,0 +1,23 @@
+{
+    "name": "WhatIDone"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+      "express": "3.0.0"
+    , "jade": ">= 0.0.1"
+	, "mongoose": " 3.6.0"
+	, "stylus": "*"
+	,"nodemailer": "0.3.44"
+	,"cron":  "1.0.1"
+	,"imap": "0.7.8"
+	,"vows": "0.7.0"
+	,"sinon": "1.6.0"
+	,"pegjs": "0.7.0"
+	,"mailparser": "0.3.4"
+	,"winston": "0.6.2"
+  },
+   "engines": {
+    "node": "0.8.x",
+    "npm": "1.1.x"
+  }
+}
