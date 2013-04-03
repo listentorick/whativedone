@@ -89,11 +89,13 @@ mongoose.connection.on('open', function (err) {
 	//});
 	
 	
-	app.get('/read', function() {
+	app.get('/read', function(req,res) {
 		nudgeResponseGateway.read();
+		
+		res.end("reading.."); 
 	});
 	
-	app.get('/nudge', function() {
+	app.get('/nudge', function(req,res) {
 		logger.info("handling request to nudge");
 		MongoUser.find(
 			{},
@@ -109,6 +111,8 @@ mongoose.connection.on('open', function (err) {
 
 			}
 		);
+		
+		res.end("nudging.."); 
 	});
 
 });
