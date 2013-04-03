@@ -10,6 +10,8 @@ var CronJob = require("cron").CronJob;
 var logger = require("./logger");
 
 var IMAPReader = require("./IMAPReader");
+var IMAPMessageToNudgeResponseAdapter = require("./IMAPMessageToNudgeResponseAdapter");
+var NudgeResponseGateway = require("./nudgeResponseGateway");
 var MessageParser = require("./messageParser");
 var TaskParser = require("./taskParser");
 var MongoUser = require("./models/user");
@@ -54,29 +56,41 @@ mongoose.connection.on('open', function (err) {
 
 	logger.info("connected");
 	
-	sender = new Sender(configuration.sender);
+	//sender = new Sender(configuration.sender);
 
-	nudger = new Nudger(sender);
 	
-	taskParser = new TaskParser();
+	
+	//taskParser = new TaskParser();
 
-	messageParser = new MessageParser(taskParser, nudger);
+	//messageParser = new MessageParser(taskParser, nudger);
 
-	reader = new IMAPReader(configuration.reader);
-
-	reader.read(); //to be called by a cron job...
-
-	reader.on("message", function(message) {
-		messageParser.parse(message);
+	var nudger = new Nudger(sender);
+	var reader = new IMAPReader(configuration.reader);
+	var messageToNudgeResponseAdapter = new IMAPMessageToNudgeResponseAdapter();
+	
+	var nudgeResponseGateway = new NudgeResponseGateway(reader, nudger, messageToNudgeResponseAdapter);
+	
+	nudgeResponseGateway.on("nudgeResponse", function(nudgeResponse) {
+	
+		//a new nudgeresponse has entered the system...
+		logger.info("new nudge response");
+	
 	});
 
-	messageParser.on("task", function(task) {
+	 //to be called by a cron job...
+
+	//reader.on("message", function(message) {
+		//messageParser.parse(message);
+	//});
+
+//	messageParser.on("task", function(task) {
 		//seems like a good time to save?
-		console.log(JSON.stringify(task));
-	});
+	//	console.log(JSON.stringify(task));
+	//});
+	
 	
 	app.get('/read', function() {
-		reader.read();
+		nudgeResponseGateway.read();
 	});
 	
 	app.get('/nudge', function() {
@@ -100,7 +114,7 @@ mongoose.connection.on('open', function (err) {
 });
 	
 mongoose.connection.on('error', function (err) {
-	logger.info(JSON.stringify(err));
+	logger.info("wooop" + JSON.stringify(err,null, 4));
 });
 
 mongoose.connect(configuration.database);

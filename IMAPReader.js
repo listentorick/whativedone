@@ -21,6 +21,11 @@ function IMAPReader(configuration) {
 
 IMAPReader.prototype.__proto__ = events.EventEmitter.prototype;
 
+
+IMAPReader.prototype.markMessageAsRead = function(message,callback) {
+};
+
+
 /**
 * reads any available nudge response
 */
