@@ -12,43 +12,41 @@ function NudgeResponseGateway(reader, nudger, nudgeResponseAdapter) {
 	
 	//handle the messages emitted by the imap reader
 	this._imapReader.on("message", function(message) {
-		self._nudgeResponseAdapter.adapt(message, function(err, nudgeResponse) {
+		var nudgeResponse = self._nudgeResponseAdapter.adapt(message);
 		
-			//is the nudgeid valid?
-			self._nudger.findById(nudgeResponse.nudgeId, function(err, nudge){
-				if(!err && nudge) {
-					logger.info("Nudge found in the database!");
-					
-					if(!nudge.handled) {
-						nudgeResponse.save(function(err) {
-							if(!err) {
-		
-								nudge.handled = true;
-								nudge.handledAt = new Date();
-								nudge.save(function(err) {
-								
-									if(!err) {
-										self._imapReader.markMessageAsRead(message); //fire and forget.
-										logger.info("new nudgeResponse");
-										self.emit("nudgeResponse", nudgeResponse);
-									} else {
-										logger.error(err);
-									}
-								
-								});
-							} else {
-								logger.error(err);
-							}
-						});
-					} else {
-						logger.info("Nudge already handled!");
-					}
-					
+		//is the nudgeid valid?
+		self._nudger.findById(nudgeResponse.nudgeId, function(err, nudge){
+			if(!err && nudge) {
+				logger.info("Nudge found in the database!");
+				
+				if(!nudge.handled) {
+					nudgeResponse.save(function(err) {
+						if(!err) {
+	
+							nudge.handled = true;
+							nudge.handledAt = new Date();
+							nudge.save(function(err) {
+							
+								if(!err) {
+									self._imapReader.markMessageAsRead(message); //fire and forget.
+									logger.info("new nudgeResponse");
+									self.emit("nudgeResponse", nudgeResponse);
+								} else {
+									logger.error(err);
+								}
+							
+							});
+						} else {
+							logger.error(err);
+						}
+					});
 				} else {
-					logger.info("Nudge id not found in the database!");
+					logger.info("Nudge already handled!");
 				}
-			});
-			
+				
+			} else {
+				logger.info("Nudge id not found in the database!");
+			}	
 		});
 	});
 
