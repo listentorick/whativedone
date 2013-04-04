@@ -2,13 +2,19 @@ var events = require('events');
 var logger = require("./logger");
 	
 /**
-* Emits objects in the form {header: {},body:""} 
+* Responsible for generating Nudge Responses.
+* NudgeResponses mean we have a copy of the original nudge message body
 */
-function NudgeResponseGateway(reader, nudger, nudgeResponseAdapter) {
+function NudgeResponseGateway(reader, nudger, nudgeResponseAdapter, nudgeResponseTaskExtractor) {
 	this._imapReader = reader;	
 	this._nudger = nudger;
 	var self = this;
 	this._nudgeResponseAdapter = nudgeResponseAdapter;
+	this._nudgeResponseTaskExtractor = nudgeResponseTaskExtractor;
+	
+	nudgeResponseTaskExtractor.on("task", function(task) {
+		self.emit("task", task);
+	});
 	
 	//handle the messages emitted by the imap reader
 	this._imapReader.on("message", function(message) {
@@ -22,17 +28,25 @@ function NudgeResponseGateway(reader, nudger, nudgeResponseAdapter) {
 				if(!nudge.handled) {
 					nudgeResponse.save(function(err) {
 						if(!err) {
-	
-							nudge.handled = true;
-							nudge.handledAt = new Date();
-							nudge.save(function(err) {
+							
+							//now lets extract the tasks
+							nudgeResponseTaskExtractor.extract(nudgeResponse, function(err) {
 							
 								if(!err) {
-									self._imapReader.markMessageAsRead(message); //fire and forget.
-									logger.info("new nudgeResponse");
-									self.emit("nudgeResponse", nudgeResponse);
-								} else {
-									logger.error(err);
+									logger.info("Extracted tasks from nudge response.");
+									nudge.handled = true;
+									nudge.handledAt = new Date();
+									nudge.save(function(err) {
+									
+										if(!err) {
+											self._imapReader.markMessageAsRead(message); //fire and forget.
+											logger.info("new nudgeResponse");
+											self.emit("nudgeResponse", nudgeResponse);
+										} else {
+											logger.error(err);
+										}
+									
+									});
 								}
 							
 							});

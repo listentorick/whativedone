@@ -15,7 +15,7 @@ var NudgeResponseGateway = require("./nudgeResponseGateway");
 var MessageParser = require("./messageParser");
 var TaskParser = require("./taskParser");
 var MongoUser = require("./models/user");
-
+var NudgeResponseTaskExtractor = require("./nudgeResponseTaskExtractor");
 
 
 app.configure(function(){
@@ -56,25 +56,45 @@ mongoose.connection.on('open', function (err) {
 
 	logger.info("connected");
 	
-	//sender = new Sender(configuration.sender);
-
-	
-	
-	//taskParser = new TaskParser();
-
-	//messageParser = new MessageParser(taskParser, nudger);
-
+	var sender = new Sender(configuration.sender);
+	var taskParser = new TaskParser();
 	var nudger = new Nudger(sender);
 	var reader = new IMAPReader(configuration.reader);
 	var messageToNudgeResponseAdapter = new IMAPMessageToNudgeResponseAdapter();
+	var nudgeResponseTaskExtractor = new NudgeResponseTaskExtractor(taskParser);
 	
-	var nudgeResponseGateway = new NudgeResponseGateway(reader, nudger, messageToNudgeResponseAdapter);
+	var nudgeResponseGateway = new NudgeResponseGateway(reader, nudger, messageToNudgeResponseAdapter, nudgeResponseTaskExtractor);
+	
+
+	var job = new CronJob('00 00 16 * * 1-5', function(){
+		// Runs every weekday (Monday through Friday)
+		// at 4pm. It does not run on Saturday
+		// or Sunday.
+		console.log("starting cron job");
+		nudgeResponseGateway.read();
+	
+	
+	  }, function () {
+		// This function is executed when the job stops
+	  }, 
+	  true /* Start the job right now */,
+	  //timeZone /* Time zone of this job. */
+	  "Europe/London"
+	);
+	
+	job.start();
+	
+	
 	
 	nudgeResponseGateway.on("nudgeResponse", function(nudgeResponse) {
 	
 		//a new nudgeresponse has entered the system...
 		logger.info("new nudge response");
+	});
 	
+	nudgeResponseGateway.on("task", function(tasl) {
+		//a new nudgeresponse has entered the system...
+		logger.info("new task");
 	});
 
 	 //to be called by a cron job...
@@ -106,7 +126,7 @@ mongoose.connection.on('open', function (err) {
 				for(var i=0; i<docs.length; i++ ){
 					nudger.nudge(docs[i], function(err, result) {});
 				}
-			  
+			  r
 			} else { throw err;}
 
 			}
