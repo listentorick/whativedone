@@ -16,6 +16,7 @@ NudgeResponseTaskExtractor.prototype.__proto__ = events.EventEmitter.prototype;
 
 NudgeResponseTaskExtractor.prototype.extract = function(nudgeResponse, callback) {
 	var count = 0;
+	var self = this;
 	var body = nudgeResponse.text;
 	var taskBodies = body.match(/[^\r\n]+/g);
 	for(var i=0; i<taskBodies.length;i++){	
@@ -28,8 +29,8 @@ NudgeResponseTaskExtractor.prototype.extract = function(nudgeResponse, callback)
 	}		
 };
 
-NudgeResponseTaskExtractor.prototype.constructTask = function(nudgeResponse, taskDescription){
-	  
+NudgeResponseTaskExtractor.prototype.constructTask = function(nudgeResponse, taskDescription, callback){
+	var self = this;
 	var task = new MongoTask({userId:nudgeResponse.userId, text: taskDescription});
 	this._taskParser.parse(task, function(err, result) {
 	
