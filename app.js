@@ -66,11 +66,11 @@ mongoose.connection.on('open', function (err) {
 	var nudgeResponseGateway = new NudgeResponseGateway(reader, nudger, messageToNudgeResponseAdapter, nudgeResponseTaskExtractor);
 	
 
-	var job = new CronJob('00 00 16 * * 1-5', function(){
+	var readCronJob = new CronJob('00 00 08 * * 1-5', function(){
 		// Runs every weekday (Monday through Friday)
-		// at 4pm. It does not run on Saturday
+		// at 8pm. It does not run on Saturday
 		// or Sunday.
-		console.log("starting cron job");
+		console.log("starting read cron job");
 		nudgeResponseGateway.read();
 	
 	
@@ -82,7 +82,39 @@ mongoose.connection.on('open', function (err) {
 	  "Europe/London"
 	);
 	
-	job.start();
+	readCronJob.start();
+	
+	var nudgeCronJob = new CronJob('00 00 16 * * 1-5', function(){
+		// Runs every weekday (Monday through Friday)
+		// at 4pm. It does not run on Saturday
+		// or Sunday.
+		console.log("starting nudge cron job");
+		
+		MongoUser.find(
+			{},
+			function(err, docs) {
+			if (!err){ 
+				logger.info("found " + docs.length + " users");
+			  
+				for(var i=0; i<docs.length; i++ ){
+					nudger.nudge(docs[i], function(err, result) {});
+				}
+			  r
+			} else { throw err;}
+
+			}
+		);
+	
+	
+	  }, function () {
+		// This function is executed when the job stops
+	  }, 
+	  true /* Start the job right now */,
+	  //timeZone /* Time zone of this job. */
+	  "Europe/London"
+	);
+	
+	nudgeCronJob.start();
 	
 	
 	
