@@ -12,7 +12,6 @@ var logger = require("./logger");
 var IMAPReader = require("./IMAPReader");
 var IMAPMessageToNudgeResponseAdapter = require("./IMAPMessageToNudgeResponseAdapter");
 var NudgeResponseGateway = require("./nudgeResponseGateway");
-var MessageParser = require("./messageParser");
 var TaskParser = require("./taskParser");
 var MongoUser = require("./models/user");
 var NudgeResponseTaskExtractor = require("./nudgeResponseTaskExtractor");
@@ -70,7 +69,7 @@ mongoose.connection.on('open', function (err) {
 		// Runs every weekday (Monday through Friday)
 		// at 8pm. It does not run on Saturday
 		// or Sunday.
-		console.log("starting read cron job");
+		logger.info("starting read cron job");
 		nudgeResponseGateway.read();
 	
 	
@@ -88,7 +87,7 @@ mongoose.connection.on('open', function (err) {
 		// Runs every weekday (Monday through Friday)
 		// at 4pm. It does not run on Saturday
 		// or Sunday.
-		console.log("starting nudge cron job");
+		logger.info("starting nudge cron job");
 		
 		MongoUser.find(
 			{},
@@ -129,17 +128,6 @@ mongoose.connection.on('open', function (err) {
 		logger.info("new task");
 	});
 
-	 //to be called by a cron job...
-
-	//reader.on("message", function(message) {
-		//messageParser.parse(message);
-	//});
-
-//	messageParser.on("task", function(task) {
-		//seems like a good time to save?
-	//	console.log(JSON.stringify(task));
-	//});
-	
 	
 	app.get('/read', function(req,res) {
 		nudgeResponseGateway.read();

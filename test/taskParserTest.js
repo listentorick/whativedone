@@ -1,78 +1,116 @@
-
-var vows = require('vows'),
-    assert = require('assert');
-
+var assert = require('assert');
 var TaskParser = require('../taskParser');
 var MongoTask = require("../models/task");
 
-vows.describe('Task Parsing with ').addBatch({
+describe('A TaskParser', function(){
 
-    'A TaskParser': {
-        topic: new TaskParser(),
-		'when parsing a task without a primary tag' : {
-			topic: function (parser) {
-				parser.parse(new MongoTask({text: "task without tag at the start"}),this.callback);
-            },
-			'should return an error': function(err, result) {
-				assert.isNotNull(err);
-			}
-		},
-		'when parsing a task with 1 tag ': {
-            topic: function (parser) {
-				parser.parse(new MongoTask({text: "#support"}),this.callback);
-            },
-			'should not throw an exception':function (err, result) {
-				assert.isNull(err);
-			},
-			'should have a primaryTag ':function (err, result) {
-				assert.equal(result.primaryTag,"support", "Tag added");
-			},
-			'should add 1 tag':function (err, result) {
-				assert.equal(result.tags.length,1, "Tag added");
-			},
-			'should add 1 tag with the correct name':function (err, result) {
-				assert.equal(result.tags[0],"support", "Correct tag added");
-			}			
-        },
+	var parser = new TaskParser();
+
+	describe('when parsing a task without a primary tag', function() {
 		
-        'when parsing a task with 1 tag and a time': {
-            topic: function (parser) {
-				parser.parse(new MongoTask({text: "#support +5"}),this.callback);
-            },
-			'should not throw an exception':function (err, result) {
-				assert.isNull(err);
-			},
-			'should add 1 tag':function (err, result) {
-				assert.equal(result.tags.length,1, "Tag added");
-			},
-			'should have a primaryTag ':function (err, result) {
-				assert.equal(result.primaryTag,"support", "Tag added");
-			},
-			'should add 1 tag with the correct name':function (err, result) {
-				assert.equal(result.tags[0],"support", "Correct tag added");
-			},
-			'should add 1 time':function (err, result) {
-				assert.equal(result.tags.length,1, "Time added");
-			}				
-        },
+		it('should return an error', function(done) {
+			parser.parse(new MongoTask({text: "task without tag at the start"}), function(err,result) {
+				assert.ok(err!=null);
+				done();
+			});
+		});
+	});
+	
+	describe('when parsing a task with 1 tag', function() {
+		var error;
+		var task;
 		
-		'when parsing a task with 2 tags ': {
-            topic: function (parser) {
-				parser.parse(new MongoTask({text: "#support #helpdesk"}),this.callback);
-            },
-			'should not throw an exception':function (err, result) {
-				assert.isNull(err);
-			},
-			'should add 2 tag':function (err, result) {
-				assert.equal(result.tags.length,2, "2 Tags added");
-			},
-			'should have a primaryTag ':function (err, result) {
-				assert.equal(result.primaryTag,"support", "Tag added");
-			},
-			'should add 2 tags with the correct name':function (err, result) {
-				assert.equal(result.tags[0],"support", "Correct tag added");
-				assert.equal(result.tags[1],"helpdesk", "Correct tag added");
-			}			
-        }
-	}
-}).export(module); // Export the Suite
+		before(function(done) {
+			parser.parse(new MongoTask({text: "#support"}),function(err,result) {
+				error = err;
+				task = result;
+				done();
+			});
+		});
+		
+		it('should not throw an exception', function () {
+			assert.ok(error==null);
+		});
+		
+		it('should have a primaryTag ', function () {
+			assert.equal(task.primaryTag,"support", "Tag added");
+		});
+		
+		it('should add 1 tag', function () {
+			assert.equal(task.tags.length,1, "Tag added");
+		});
+		
+		it('should add 1 tag with the correct name', function () {
+			assert.equal(task.tags[0],"support", "Correct tag added");
+		});		
+	});
+	
+	describe('when parsing a task with 1 tag and a time',function() {
+		var error;
+		var task;
+		
+		before(function(done) {
+			parser.parse(new MongoTask({text: "#support +5"}),function(err,result) {
+				error = err;
+				task = result;
+				done();
+			});
+		});
+		
+		it('should not throw an exception', function () {
+			assert.ok(error==null);
+		});
+		
+		it('should add 1 tag', function () {
+			assert.equal(task.tags.length,1, "Tag added");
+		});
+		
+		it('should have a primaryTag', function () {
+			assert.equal(task.primaryTag,"support", "Tag added");
+		});
+		
+		it('should add 1 tag with the correct name', function () {
+			assert.equal(task.tags[0],"support", "Correct tag added");
+		});
+			
+		it('should add 1 time', function () {
+			assert.equal(task.tags.length,1, "Time added");
+		})		
+		
+	});
+	
+	describe('when parsing a task with 2 tags ', function() {
+		var error;
+		var task;
+		
+		before(function(done) {
+			parser.parse(new MongoTask({text: "#support #helpdesk"}),function(err,result) {
+				error = err;
+				task = result;
+				done();
+			});
+		});
+	
+		it('should not throw an exception', function () {
+			assert.ok(error==null);
+		});
+		
+		it('should add 2 tag', function () {
+			assert.equal(task.tags.length,2, "2 Tags added");
+		});
+		
+		it('should have a primaryTag', function () {
+			assert.equal(task.primaryTag,"support", "Tag added");
+		});
+		
+		it('should add 2 tags with the correct name', function () {
+			assert.equal(task.tags[0],"support", "Correct tag added");
+			assert.equal(task.tags[1],"helpdesk", "Correct tag added");
+		});			
+    });
+	
+	
+	
+});
+
+
